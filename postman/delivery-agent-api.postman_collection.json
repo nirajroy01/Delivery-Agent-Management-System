@@ -1,0 +1,142 @@
+{
+  "info": {
+    "name": "Delivery Agent API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "agentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth / Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+      }
+    },
+    {
+      "name": "Auth / Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Password123!\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.success && json.data && json.data.token) {",
+              "  pm.collectionVariables.set('token', json.data.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth / Me",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+      }
+    },
+    {
+      "name": "Agents / List",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": {
+          "raw": "{{baseUrl}}/agents?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["agents"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "limit", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Agents / Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Rahul Sharma\",\n  \"phoneNumber\": \"+919876543210\",\n  \"email\": \"rahul@example.com\",\n  \"serviceArea\": \"Bangalore\",\n  \"status\": \"ACTIVE\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/agents", "host": ["{{baseUrl}}"], "path": ["agents"] }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.success && json.data && json.data.id) {",
+              "  pm.collectionVariables.set('agentId', json.data.id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agents / Get By Id",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/agents/{{agentId}}", "host": ["{{baseUrl}}"], "path": ["agents", "{{agentId}}"] }
+      }
+    },
+    {
+      "name": "Agents / Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceArea\": \"Hyderabad\",\n  \"status\": \"INACTIVE\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/agents/{{agentId}}", "host": ["{{baseUrl}}"], "path": ["agents", "{{agentId}}"] }
+      }
+    },
+    {
+      "name": "Agents / Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": { "raw": "{{baseUrl}}/agents/{{agentId}}", "host": ["{{baseUrl}}"], "path": ["agents", "{{agentId}}"] }
+      }
+    },
+    {
+      "name": "Health / Check",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    }
+  ]
+}
