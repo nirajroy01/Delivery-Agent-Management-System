@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Agent, CreateAgentInput, UpdateAgentInput } from '@/types/agent';
+import { Agent, CreateAgentInput } from '@/types/agent';
 
 const schema = z.object({
   fullName: z.string().min(2),
@@ -19,10 +19,10 @@ export default function AgentForm({
   submitLabel,
 }: {
   initialValues?: Partial<Agent>;
-  onSubmit: (values: any) => Promise<void> | void;
+  onSubmit: (values: CreateAgentInput) => Promise<void> | void;
   submitLabel: string;
 }) {
-  const form = useForm({
+  const form = useForm<CreateAgentInput>({
     resolver: zodResolver(schema),
     defaultValues: {
       fullName: initialValues?.fullName || '',
@@ -34,40 +34,42 @@ export default function AgentForm({
   });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>
-        <input {...form.register('fullName')} className="w-full rounded border px-3 py-2" />
-        {form.formState.errors.fullName && <p className="mt-1 text-sm text-red-600">{form.formState.errors.fullName.message}</p>}
+        <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Full Name <span className="text-rose-400">*</span></label>
+        <input {...form.register('fullName')} autoComplete="name" className="field-control" />
+        {form.formState.errors.fullName && <p className="mt-1 text-sm text-rose-400">{form.formState.errors.fullName.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Phone Number</label>
-        <input {...form.register('phoneNumber')} className="w-full rounded border px-3 py-2" />
-        {form.formState.errors.phoneNumber && <p className="mt-1 text-sm text-red-600">{form.formState.errors.phoneNumber.message}</p>}
+        <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Phone Number <span className="text-rose-400">*</span></label>
+        <input {...form.register('phoneNumber')} type="tel" autoComplete="tel" className="field-control" />
+        {form.formState.errors.phoneNumber && <p className="mt-1 text-sm text-rose-400">{form.formState.errors.phoneNumber.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
-        <input type="email" {...form.register('email')} className="w-full rounded border px-3 py-2" />
-        {form.formState.errors.email && <p className="mt-1 text-sm text-red-600">{form.formState.errors.email.message}</p>}
+        <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Email Address <span className="text-rose-400">*</span></label>
+        <input type="email" autoComplete="email" {...form.register('email')} className="field-control" />
+        {form.formState.errors.email && <p className="mt-1 text-sm text-rose-400">{form.formState.errors.email.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Service Area</label>
-        <input {...form.register('serviceArea')} className="w-full rounded border px-3 py-2" />
-        {form.formState.errors.serviceArea && <p className="mt-1 text-sm text-red-600">{form.formState.errors.serviceArea.message}</p>}
+        <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Service Area <span className="text-rose-400">*</span></label>
+        <input {...form.register('serviceArea')} autoComplete="address-level2" className="field-control" />
+        {form.formState.errors.serviceArea && <p className="mt-1 text-sm text-rose-400">{form.formState.errors.serviceArea.message}</p>}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm font-medium text-slate-700">Status</label>
-        <select {...form.register('status')} className="w-full rounded border px-3 py-2">
+        <label className="mb-1.5 block text-sm font-medium text-[var(--text)]">Status <span className="text-rose-400">*</span></label>
+        <select {...form.register('status')} className="field-control">
           <option value="ACTIVE">ACTIVE</option>
           <option value="INACTIVE">INACTIVE</option>
         </select>
       </div>
+      </div>
 
-      <button type="submit" className="rounded bg-blue-600 px-4 py-2 text-white" disabled={form.formState.isSubmitting}>
+      <button type="submit" className="primary-button" disabled={form.formState.isSubmitting}>
         {form.formState.isSubmitting ? 'Saving...' : submitLabel}
       </button>
     </form>

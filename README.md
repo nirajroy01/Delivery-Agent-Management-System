@@ -11,6 +11,9 @@ This project delivers a full-stack delivery agent management platform with a Nex
 - MongoDB persistence with Mongoose models
 - Redis cache-aside for list and detail reads
 - Search, filtering, and pagination
+- Admin analytics based on current agent records
+- Persisted agent activity history
+- Admin CSV export using the active agent filters
 - Admin-only create/update/delete access
 - Zod validation on input and query params
 - Jest + Supertest backend tests
@@ -89,10 +92,18 @@ The cache invalidates on create, update, and delete operations. Redis failures a
 ### Agents
 
 - `GET /api/agents`
+- `GET /api/agents/export` — admin-only CSV export; accepts the list search, status, and repeated `serviceArea` filters
 - `GET /api/agents/:id`
+- `GET /api/agents/:id/activity` — admin-only persisted activity history, newest first
 - `POST /api/agents`
 - `PUT /api/agents/:id`
 - `DELETE /api/agents/:id`
+
+### Analytics
+
+- `GET /api/analytics/overview` — admin-only current agent totals, status distribution, and service-area distribution
+
+Analytics reports current MongoDB state only. The application does not have historical snapshots, so it does not report historical trends.
 
 ### Health
 
@@ -104,7 +115,7 @@ Run backend tests with:
 
 ```bash
 cd backend
-npm test
+npm test -- --runInBand
 ```
 
 A coverage run can be added with:

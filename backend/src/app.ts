@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import authRoutes from './routes/auth.routes';
 import agentRoutes from './routes/agent.routes';
+import analyticsRoutes from './routes/analytics.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 import { notFoundMiddleware } from './middleware/not-found.middleware';
 import { env } from './config/env';
@@ -21,6 +22,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', agentRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);

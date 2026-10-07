@@ -6,7 +6,7 @@ import AgentForm from '@/components/AgentForm';
 import ErrorMessage from '@/components/ErrorMessage';
 import Loading from '@/components/Loading';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { createAgent, getCurrentUser } from '@/lib/api';
+import { createAgent, getApiErrorMessage, getCurrentUser } from '@/lib/api';
 import { CreateAgentInput } from '@/types/agent';
 
 export default function CreateAgentPage() {
@@ -31,12 +31,12 @@ export default function CreateAgentPage() {
     load();
   }, [router]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: CreateAgentInput) => {
     try {
       const response = await createAgent(values as CreateAgentInput);
       router.push(`/agents/${response.data.id}`);
-    } catch (err: any) {
-      setError(err?.response?.data?.error?.message || 'Unable to create agent');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Unable to create agent'));
     }
   };
 
@@ -44,8 +44,10 @@ export default function CreateAgentPage() {
 
   return (
     <ProtectedRoute>
-      <div className="mx-auto max-w-2xl rounded-xl border bg-white p-8 shadow-sm">
-        <h1 className="mb-6 text-3xl font-bold text-slate-900">Create Agent</h1>
+      <div className="surface mx-auto max-w-2xl p-6 sm:p-8">
+        <p className="mb-1 text-sm text-blue-400">Directory</p>
+        <h1 className="mb-2 text-2xl font-semibold text-[var(--text)]">Create agent</h1>
+        <p className="mb-6 text-sm text-[var(--muted)]">Add a delivery agent to your operations.</p>
         {error ? <ErrorMessage message={error} /> : null}
         <AgentForm onSubmit={handleSubmit} submitLabel="Create Agent" />
       </div>

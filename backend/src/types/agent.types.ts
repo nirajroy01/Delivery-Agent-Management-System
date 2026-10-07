@@ -12,7 +12,7 @@ export interface UpdateAgentInput {
   fullName?: string;
   phoneNumber?: string;
   email?: string;
-  serviceArea?: string;
+  serviceArea?: string | string[];
   status?: AgentStatus;
 }
 

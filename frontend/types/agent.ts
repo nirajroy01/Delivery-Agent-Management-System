@@ -1,5 +1,22 @@
 export type AgentStatus = 'ACTIVE' | 'INACTIVE';
 
+export type AgentActivityAction =
+  | 'AGENT_CREATED'
+  | 'PROFILE_UPDATED'
+  | 'STATUS_CHANGED'
+  | 'SERVICE_AREA_CHANGED'
+  | 'AGENT_DELETED';
+
+export type AgentActivity = {
+  id: string;
+  action: AgentActivityAction;
+  description: string;
+  previousValue?: string;
+  newValue?: string;
+  performedBy?: string;
+  createdAt: string;
+};
+
 export type Agent = {
   id: string;
   agentId: string;
@@ -27,6 +44,14 @@ export type Pagination = {
   limit: number;
   total: number;
   totalPages: number;
+};
+
+export type AgentFilters = {
+  page?: number;
+  limit?: number;
+  status?: string;
+  serviceArea?: string | string[];
+  search?: string;
 };
 
 export type PaginatedAgentsResponse = {

@@ -1,7 +1,7 @@
-node_modules
-.next
+node_modules/
+.next/
 coverage
-dist
+dist/
 logs
 .env
 .env.local

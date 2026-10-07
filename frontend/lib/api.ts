@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { AuthUser, LoginInput, RegisterInput } from '@/types/auth';
-import { Agent, CreateAgentInput, PaginatedAgentsResponse, UpdateAgentInput } from '@/types/agent';
+import { Agent, AgentActivity, AgentFilters, CreateAgentInput, PaginatedAgentsResponse, UpdateAgentInput } from '@/types/agent';
+import { AnalyticsOverview } from '@/types/analytics';
 import { clearAuthSession, getStoredToken } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
@@ -11,6 +12,13 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export const getApiErrorMessage = (error: unknown, fallback: string) => {
+  if (axios.isAxiosError<{ error?: { message?: string } }>(error)) {
+    return error.response?.data?.error?.message || fallback;
+  }
+  return fallback;
+};
 
 api.interceptors.request.use((config) => {
   const token = getStoredToken();
@@ -39,9 +47,31 @@ export const getCurrentUser = async () => {
   return response.data.data;
 };
 
-export const getAgents = async (params?: Record<string, string | number | undefined>) => {
-  const response = await api.get<{ success: boolean; data: PaginatedAgentsResponse }>('/agents', { params });
+export const getAgents = async (params?: AgentFilters) => {
+  const response = await api.get<{ success: boolean; data: PaginatedAgentsResponse }>('/agents', {
+    params,
+    paramsSerializer: { indexes: null },
+  });
   return response.data.data;
+};
+
+export const getAnalyticsOverview = async () => {
+  const response = await api.get<{ success: boolean; data: AnalyticsOverview }>('/analytics/overview');
+  return response.data.data;
+};
+
+export const getAgentActivity = async (id: string) => {
+  const response = await api.get<{ success: boolean; data: AgentActivity[] }>(`/agents/${id}/activity`);
+  return response.data.data;
+};
+
+export const exportAgentsCsv = async (filters: Pick<AgentFilters, 'search' | 'status' | 'serviceArea'>) => {
+  const response = await api.get<Blob>('/agents/export', {
+    params: filters,
+    paramsSerializer: { indexes: null },
+    responseType: 'blob',
+  });
+  return response.data;
 };
 
 export const getAgent = async (id: string) => {

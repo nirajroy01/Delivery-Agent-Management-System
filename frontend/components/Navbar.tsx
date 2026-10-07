@@ -3,44 +3,67 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { clearAuthSession, getStoredUser } from '@/lib/auth';
+import { LogOut, Moon, Sun, Truck } from 'lucide-react';
+import { clearAuthSession, getStoredUser, subscribeToAuthSession } from '@/lib/auth';
 import { AuthUser } from '@/types/auth';
 
 export default function Navbar() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
   useEffect(() => {
-    setUser(getStoredUser());
+    const syncUser = () => setUser(getStoredUser());
+    syncUser();
+    const unsubscribe = subscribeToAuthSession(syncUser);
+    const storedTheme = window.localStorage.getItem('agent-dashboard-theme');
+    if (storedTheme === 'light' || storedTheme === 'dark') {
+      document.documentElement.dataset.theme = storedTheme;
+      setTheme(storedTheme);
+    }
+    return unsubscribe;
   }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    window.localStorage.setItem('agent-dashboard-theme', nextTheme);
+    setTheme(nextTheme);
+  };
 
   const handleLogout = () => {
     clearAuthSession();
-    router.push('/login');
+    setUser(null);
+    router.replace('/login');
   };
 
   return (
-    <header className="border-b bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-        <div className="flex items-center gap-3">
-          <Link href="/dashboard" className="text-xl font-bold text-slate-900">Delivery Agents</Link>
-        </div>
-
-        <div className="flex items-center gap-4">
+    <header className="app-header">
+      <Link href="/dashboard" className="flex items-center gap-3 text-[15px] font-semibold text-[var(--text)]">
+        <span className="flex size-9 items-center justify-center rounded-md bg-blue-500 text-white"><Truck size={19} /></span>
+        <span>Delivery Agent<span className="block text-[11px] font-normal text-[var(--muted)]">Management System</span></span>
+      </Link>
+      <div className="flex items-center gap-3 sm:gap-5">
+        <span className="hidden border-r border-[var(--line)] pr-5 text-sm text-[var(--muted)] md:block">Agent Management</span>
+        <button type="button" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`} className="flex size-9 items-center justify-center rounded-md border border-[var(--line)] text-[var(--muted)] hover:text-[var(--text)]">
+          {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
           {user ? (
             <>
-              <span className="text-sm font-medium text-slate-700">{user.name}</span>
-              <button onClick={handleLogout} className="rounded bg-slate-900 px-3 py-2 text-sm text-white">
-                Logout
+              <div className="hidden items-center gap-2 sm:flex">
+                <span className="flex size-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">{user.name.charAt(0).toUpperCase()}</span>
+                <span className="text-sm font-medium text-[var(--text)]">{user.name}<span className="block text-xs font-normal text-[var(--muted)]">{user.role}</span></span>
+              </div>
+              <button onClick={handleLogout} aria-label="Log out" className="flex size-9 items-center justify-center rounded-md border border-[var(--line)] text-[var(--muted)] hover:border-red-400 hover:text-red-400">
+                <LogOut size={17} />
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="text-sm text-slate-700">Login</Link>
-              <Link href="/register" className="rounded bg-blue-600 px-3 py-2 text-sm text-white">Register</Link>
+              <Link href="/login" className="text-sm text-[var(--muted)] hover:text-[var(--text)]">Login</Link>
+              <Link href="/register" className="primary-button">Register</Link>
             </>
           )}
-        </div>
       </div>
     </header>
   );

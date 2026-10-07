@@ -6,28 +6,40 @@ import DashboardStats from '@/components/DashboardStats';
 import ErrorMessage from '@/components/ErrorMessage';
 import Loading from '@/components/Loading';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getAgents, getCurrentUser } from '@/lib/api';
+import { getAgents, getApiErrorMessage, getCurrentUser } from '@/lib/api';
 import { AuthUser } from '@/types/auth';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0 });
+  const [stats, setStats] = useState({ total: 0, active: 0, inactive: 0, areas: [] as Array<{ name: string; count: number }> });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [currentUser, agentList] = await Promise.all([getCurrentUser(), getAgents({ page: 1, limit: 100 })]);
+        const [currentUser, firstPage] = await Promise.all([getCurrentUser(), getAgents({ page: 1, limit: 100 })]);
         setUser(currentUser);
-        const agents = agentList.agents;
+        const remainingPages = await Promise.all(
+          Array.from({ length: Math.max(0, firstPage.pagination.totalPages - 1) }, (_, index) =>
+            getAgents({ page: index + 2, limit: 100 }),
+          ),
+        );
+        const agents = [...firstPage.agents, ...remainingPages.flatMap((result) => result.agents)];
+        const areaCounts = agents.reduce<Record<string, number>>((counts, agent) => {
+          counts[agent.serviceArea] = (counts[agent.serviceArea] || 0) + 1;
+          return counts;
+        }, {});
         setStats({
-          total: agents.length,
+          total: firstPage.pagination.total,
           active: agents.filter((agent) => agent.status === 'ACTIVE').length,
           inactive: agents.filter((agent) => agent.status === 'INACTIVE').length,
+          areas: Object.entries(areaCounts)
+            .map(([name, count]) => ({ name, count }))
+            .sort((left, right) => right.count - left.count),
         });
-      } catch (err: any) {
-        setError(err?.response?.data?.error?.message || 'Unable to load dashboard.');
+      } catch (err: unknown) {
+        setError(getApiErrorMessage(err, 'Unable to load dashboard.'));
       } finally {
         setLoading(false);
       }
@@ -39,13 +51,14 @@ export default function DashboardPage() {
   return (
     <ProtectedRoute>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-blue-600">Overview</p>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <p className="mb-1 text-sm font-medium text-blue-400">Operations overview</p>
+            <h1 className="text-2xl font-semibold text-[var(--text)]">Welcome back{user ? `, ${user.name}` : ''}</h1>
+            <p className="mt-1 text-sm text-[var(--muted)]">A live view of your delivery agent operations.</p>
           </div>
           {user?.role === 'ADMIN' && (
-            <Link href="/agents/create" className="rounded bg-blue-600 px-4 py-2 text-white">
+            <Link href="/agents/create" className="primary-button">
               Add Agent
             </Link>
           )}
@@ -54,17 +67,7 @@ export default function DashboardPage() {
         {loading ? <Loading label="Loading dashboard..." /> : null}
         {error ? <ErrorMessage message={error} /> : null}
 
-        {!loading && !error && <DashboardStats total={stats.total} active={stats.active} inactive={stats.inactive} />}
-
-        <div className="mt-8 rounded-xl border bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-slate-900">Quick actions</h2>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/agents" className="rounded bg-slate-900 px-4 py-2 text-white">View Agents</Link>
-            {user?.role === 'ADMIN' && (
-              <Link href="/agents/create" className="rounded border border-slate-300 px-4 py-2 text-slate-700">Create Agent</Link>
-            )}
-          </div>
-        </div>
+        {!loading && !error && <DashboardStats total={stats.total} active={stats.active} inactive={stats.inactive} areaCount={stats.areas.length} areas={stats.areas} />}
       </div>
     </ProtectedRoute>
   );
