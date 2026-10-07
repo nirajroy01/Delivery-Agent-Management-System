@@ -11,13 +11,26 @@ import { env } from './config/env';
 
 export const app = express();
 
-app.use(cors({ origin: env.corsOrigin, credentials: true }));
-app.use(helmet());
-app.use(express.json());
-app.use(morgan('dev'));
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
+app.use(
+  cors({
+    origin: env.corsOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+);
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(express.json({ limit: '1mb' }));
+app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
 app.get('/api/health', (_req, res) => {
-  res.status(200).json({ success: true, data: { status: 'ok' } });
+  res.status(200).json({
+    success: true,
+    message: 'API is healthy',
+    environment: env.nodeEnv,
+  });
 });
 
 app.use('/api/auth', authRoutes);

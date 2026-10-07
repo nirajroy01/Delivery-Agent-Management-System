@@ -7,6 +7,15 @@ describe('Auth API', () => {
     await User.deleteMany({});
   });
 
+  it('returns a health status endpoint', async () => {
+    const response = await request(app).get('/api/health');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('API is healthy');
+    expect(response.body.environment).toBe('test');
+  });
+
   it('registers a user successfully', async () => {
     const response = await request(app)
       .post('/api/auth/register')

@@ -4,7 +4,11 @@ coverage
 dist/
 logs
 .env
-.env.local
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
 *.log
 .DS_Store
 .vscode/

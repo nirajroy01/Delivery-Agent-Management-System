@@ -4,6 +4,48 @@
 
 This project delivers a full-stack delivery agent management platform with a Next.js frontend, an Express + TypeScript backend, MongoDB persistence, and Redis-backed caching. It includes JWT authentication, role-based access, agent CRUD, filters, pagination, validation, tests, and Docker-based local infrastructure.
 
+## LOCAL DEVELOPMENT
+
+Local development continues to use the existing root Docker Compose setup for MongoDB and Redis.
+
+```bash
+git clone <repository-url>
+cd delivery-agent-management-system
+docker compose up -d
+
+cd backend
+npm install
+npm run dev
+
+cd ../frontend
+npm install
+npm run dev
+```
+
+The local development stack uses the existing `docker-compose.yml` configuration and keeps MongoDB and Redis available for day-to-day development.
+
+## AWS EC2 PRODUCTION
+
+The production deployment uses a separate Compose file: `docker-compose-prod.yml`.
+
+### Production deployment flow
+
+```bash
+git clone <repository>
+cd <repository>
+nano backend/.env
+docker compose -f docker-compose-prod.yml up -d --build
+```
+
+Important production details:
+
+- MongoDB remains external via MongoDB Atlas
+- Redis runs inside Docker and is reachable as `redis://redis:6379`
+- The backend runs in Docker with the compiled app from `npm start`
+- The backend health endpoint is `GET /api/health`
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full EC2 setup, security group notes, environment variables, and troubleshooting.
+
 ## Features
 
 - JWT authentication and protected routes
@@ -44,25 +86,9 @@ flowchart TD
 - Docker
 - Docker Compose
 
-## Installation
-
-```bash
-git clone <repository-url>
-cd delivery-agent-management-system
-docker compose up -d
-
-cd backend
-npm install
-npm run dev
-
-cd ../frontend
-npm install
-npm run dev
-```
-
 ## Database setup
 
-MongoDB runs in Docker and persists data in the `delivery_agent_management` database. Configure the connection string in `backend/.env` using the example file:
+MongoDB runs in Docker for local development and persists data in the `delivery_agent_management` database. Configure the development connection string in `backend/.env` using the example file:
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/delivery_agent_management
