@@ -4,10 +4,9 @@ import { Agent, AgentActivity, AgentFilters, CreateAgentInput, PaginatedAgentsRe
 import { AnalyticsOverview } from '@/types/analytics';
 import { clearAuthSession, getStoredToken } from './auth';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://3.93.44.49').replace(/\/$/, '');
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_BASE_URL.endsWith('/api') ? API_BASE_URL : `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

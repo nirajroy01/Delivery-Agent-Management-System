@@ -14,4 +14,4 @@ This app is built with Next.js, TypeScript, and Tailwind CSS.
 2. Install dependencies with `npm install`.
 3. Start the app with `npm run dev`.
 
-The frontend expects the backend API to run on `http://localhost:5000/api` unless overridden in `.env`.
+The frontend connects to the production API through Nginx at `http://3.93.44.49/api` by default. Local development can override the host in `.env` as needed.
