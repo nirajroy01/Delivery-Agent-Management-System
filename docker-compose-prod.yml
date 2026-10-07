@@ -1,31 +1,20 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: delivery-agent-backend
+  mongo:
+    image: mongo:7
+    container_name: delivery-agent-mongo
     restart: unless-stopped
-    env_file:
-      - ./backend/.env
     environment:
-      NODE_ENV: production
-      PORT: 5000
-      REDIS_URL: redis://redis:6379
+      MONGO_INITDB_DATABASE: delivery_agent_management
     ports:
-      - "5000:5000"
-    depends_on:
-      redis:
-        condition: service_healthy
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
     healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - "require('http').get('http://127.0.0.1:5000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
-      interval: 30s
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -44,5 +33,50 @@ services:
       retries: 5
       start_period: 5s
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: delivery-agent-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://mongo:27017/delivery_agent_management
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "5000:5000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:5000/api/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1));"
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  nginx:
+    image: nginx:alpine
+    container_name: delivery-agent-nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+
 volumes:
+  mongo_data:
   redis_data:
